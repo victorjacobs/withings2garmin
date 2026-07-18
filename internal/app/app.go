@@ -50,7 +50,17 @@ type SyncOptions struct {
 	MaxUploads       int
 }
 
-type SyncResult struct{ Fetched, Uploaded, Reconciled, Ignored, Conflicts, WouldUpload int }
+type SyncResult struct {
+	Fetched, Uploaded, Reconciled, Ignored, Conflicts, WouldUpload int
+	Actions                                                        []DryRunAction
+}
+
+type DryRunAction struct {
+	Action     string
+	GroupID    int64
+	MeasuredAt time.Time
+	Reason     string
+}
 
 func (runtime *Runtime) Sync(ctx context.Context, options SyncOptions) (result SyncResult, resultErr error) {
 	if options.InitialLookback <= 0 {
@@ -135,6 +145,9 @@ func (runtime *Runtime) Sync(ctx context.Context, options SyncOptions) (result S
 	for _, group := range fetched.Groups {
 		decision := withings.FilterAttribution(group.Attribution, options.IncludeAmbiguous)
 		if decision != withings.AttributionAccepted {
+			if options.DryRun {
+				result.Actions = append(result.Actions, DryRunAction{Action: "ignore", GroupID: group.GroupID, MeasuredAt: group.MeasuredAt, Reason: ignoredReason(decision)})
+			}
 			if !options.DryRun {
 				runtime.recordIgnored(&syncState, group, ignoredReason(decision))
 				if err := runtime.Store.SaveSyncState(syncState); err != nil {
@@ -194,6 +207,10 @@ func (runtime *Runtime) Sync(ctx context.Context, options SyncOptions) (result S
 			}
 		}
 		if matches == 1 {
+			if options.DryRun {
+				result.Actions = append(result.Actions, DryRunAction{Action: "reconcile", GroupID: measurement.WithingsGroupID, MeasuredAt: measurement.MeasuredAt, Reason: "remote_match"})
+				continue
+			}
 			runtime.recordTerminal(&syncState, measurement, fingerprint, state.LedgerReconciled, "remote_match")
 			if err := runtime.Store.SaveSyncState(syncState); err != nil {
 				return result, err
@@ -202,6 +219,10 @@ func (runtime *Runtime) Sync(ctx context.Context, options SyncOptions) (result S
 			continue
 		}
 		if matches > 1 || sameTime {
+			if options.DryRun {
+				result.Actions = append(result.Actions, DryRunAction{Action: "conflict", GroupID: measurement.WithingsGroupID, MeasuredAt: measurement.MeasuredAt, Reason: "garmin_timestamp_conflict"})
+				continue
+			}
 			runtime.recordConflict(&syncState, measurement, fingerprint, "garmin_timestamp_conflict")
 			if err := runtime.Store.SaveSyncState(syncState); err != nil {
 				return result, err
@@ -210,6 +231,7 @@ func (runtime *Runtime) Sync(ctx context.Context, options SyncOptions) (result S
 			continue
 		}
 		if options.DryRun {
+			result.Actions = append(result.Actions, DryRunAction{Action: "upload", GroupID: measurement.WithingsGroupID, MeasuredAt: measurement.MeasuredAt, Reason: "no_remote_match"})
 			result.WouldUpload++
 			continue
 		}

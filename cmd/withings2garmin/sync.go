@@ -33,6 +33,11 @@ func (cli *cli) newSyncCommand() *cobra.Command {
 		if err != nil {
 			return classifiedError(err)
 		}
+		if dry {
+			if err := writeDryRunActions(command, result.Actions); err != nil {
+				return operationalError(err)
+			}
+		}
 		_, err = fmt.Fprintf(command.OutOrStdout(), "fetched=%d uploaded=%d reconciled=%d ignored=%d conflicts=%d would_upload=%d\n", result.Fetched, result.Uploaded, result.Reconciled, result.Ignored, result.Conflicts, result.WouldUpload)
 		if err != nil {
 			return operationalError(err)
@@ -53,4 +58,21 @@ func (cli *cli) newSyncCommand() *cobra.Command {
 	markFlagRequired(command, "client-id")
 	markFlagRequired(command, "client-secret-file")
 	return command
+}
+
+func writeDryRunActions(command *cobra.Command, actions []app.DryRunAction) error {
+	for _, action := range actions {
+		if _, err := fmt.Fprintf(
+			command.OutOrStdout(),
+			"dry-run action=%s group_id=%d measured_at=%s reason=%s\n",
+			action.Action,
+			action.GroupID,
+			action.MeasuredAt.UTC().Format(time.RFC3339),
+			action.Reason,
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
