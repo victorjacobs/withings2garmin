@@ -23,7 +23,7 @@
                 let baseName = baseNameOf path;
                 in baseName != ".git" && baseName != ".direnv" && baseName != "result";
             };
-            vendorHash = "sha256-e6idC1E4jUWVnaymBPKvg2Z1iMJVhHe14BlQPujphoA=";
+            vendorHash = "sha256-vCwnpFEQA1eO5B4jTpHWpQBivuxGMCtyFjSMIBpfVXc=";
             env.CGO_ENABLED = "0";
             ldflags = [
               "-s" "-w"
