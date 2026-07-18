@@ -1,42 +1,63 @@
 # withings2garmin
 
-`withings2garmin` will be a small Go bridge that copies weight measurements from a Withings smart scale to Garmin Connect.
+Weight-only synchronization from a Withings scale to Garmin Connect. It is one Go binary with a Nix-first development environment; Garmin Connect endpoints are unofficial and may change.
 
-The repository currently contains the implementation specification, not the implementation. Start with [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md). Agents working on it must also follow [AGENTS.md](./AGENTS.md).
+## Development
 
-## Intended shape
-
-- One Go binary; no Python runtime or runtime package manager.
-- Go and all development tools supplied by a pinned Nix flake and direnv.
-- Weight only. No activity, sleep, blood pressure, TrainerRoad, or body-composition scope creep.
-- Official Withings OAuth 2.0 and measurement API.
-- Current reverse-engineered Garmin mobile SSO and DI OAuth bearer-token flow. The deprecated `garth` implementation is explicitly out of scope.
-- Direct Garmin weight API uploads; no home-grown FIT encoder for the weight-only use case.
-- A flake package and NixOS module with a hardened oneshot service and timer.
-- Secrets read from files/systemd credentials. Refresh tokens and sync state live outside the Nix store.
-
-## Planned commands
-
-The exact CLI is specified in the implementation plan. The expected operator flow is:
-
-```text
-withings2garmin auth withings ...
-withings2garmin auth garmin ...
-withings2garmin sync ...
-withings2garmin status ...
+```sh
+direnv allow
+nix develop -c go test ./...
+nix develop -c go build ./...
+nix flake check
 ```
 
-Regular syncs use persisted OAuth refresh tokens. Garmin account credentials are only needed during explicit interactive bootstrap or reauthentication.
+The flake supplies Go and all development tools. No host Go installation is required.
 
-## Deployment target
+## Bootstrap
 
-The primary target is a NixOS server. The planned flake will expose:
+Register a personal Withings Public API application with the `user.metrics` scope, then authenticate as the account which owns the state directory:
 
-```text
-packages.<system>.default
-devShells.<system>.default
-nixosModules.default
-checks.<system>.*
+```sh
+sudo -u withings2garmin withings2garmin --state-dir /var/lib/withings2garmin auth withings \
+  --client-id YOUR_CLIENT_ID \
+  --client-secret-file /run/secrets/withings-client-secret \
+  --redirect-uri http://127.0.0.1:8080/callback
+
+sudo -u withings2garmin withings2garmin --state-dir /var/lib/withings2garmin auth garmin \
+  --email-file /run/secrets/garmin-email \
+  --password-file /run/secrets/garmin-password
+
+sudo -u withings2garmin withings2garmin --state-dir /var/lib/withings2garmin status --check
+sudo -u withings2garmin withings2garmin --state-dir /var/lib/withings2garmin sync --dry-run \
+  --client-id YOUR_CLIENT_ID --client-secret-file /run/secrets/withings-client-secret
 ```
 
-Do not put a Withings client secret, Garmin password, access token, or refresh token in a Nix expression: the Nix store is not a secret store.
+Run one non-dry sync before enabling the timer. Garmin credentials are used only by `auth garmin`; recurring sync uses the saved DI refresh token.
+
+Use secret-manager paths appropriate to the service user. Do not put secrets in Nix expressions, command lines, the Nix store, or this repository.
+
+## NixOS
+
+```nix
+{
+  imports = [ inputs.withings2garmin.nixosModules.default ];
+  services.withings2garmin = {
+    enable = true;
+    withings = {
+      clientId = "your-public-client-id";
+      clientSecretFile = "/run/secrets/withings-client-secret";
+      redirectUri = "http://127.0.0.1:8080/callback";
+    };
+  };
+}
+```
+
+The module creates `/var/lib/withings2garmin` with restrictive ownership, injects the Withings secret through a systemd credential, and schedules an hourly hardened oneshot service. Stop the timer during bootstrap if required.
+
+## Recovery
+
+- Withings reauthentication: rerun `auth withings`; keep the sync state.
+- Garmin refresh rejected: rerun `auth garmin`; do not delete the ledger.
+- Garmin 429: wait for the next scheduled run; do not repeatedly log in.
+- Corrupt token/state files: move them aside manually and restore from backup or reauthenticate. The program never silently resets state.
+- A recorded conflict means a source group changed or Garmin has an ambiguous matching record. Inspect it manually; version 1 does not overwrite Garmin data.
