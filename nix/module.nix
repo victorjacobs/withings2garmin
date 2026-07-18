@@ -41,7 +41,7 @@ in {
     };
     schedule = mkOption {
       type = types.str;
-      default = "hourly";
+      default = "*-*-* 0/3:00:00";
     };
     randomizedDelaySec = mkOption {
       type = types.str;
@@ -85,8 +85,6 @@ in {
     users.users.${cfg.user} = {
       isSystemUser = true;
       group = cfg.group;
-      home = "/var/lib/withings2garmin";
-      createHome = true;
     };
 
     systemd.tmpfiles.rules = ["d /var/lib/withings2garmin 0700 ${cfg.user} ${cfg.group} -"];

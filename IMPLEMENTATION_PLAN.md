@@ -33,7 +33,7 @@ These are deliberate constraints, not questions for the implementation pass:
 - The recurring service never stores or uses the Garmin password. A failed Garmin refresh token requires an explicit `auth garmin` run.
 - Use JSON state files with schema versions, atomic replacement, restrictive permissions, and a process lock. A database is unnecessary for one person's scale data.
 - Default first-run history is 30 days. Explicit backfill flags can select a longer range.
-- Default polling is hourly with timer jitter. Withings says not to poll a user more often than every ten minutes; one scale measurement a day does not need a tiny polling interval.
+- Default polling is every three hours with timer jitter. Withings says not to poll a user more often than every ten minutes; one scale measurement a day does not need a tiny polling interval.
 
 ### Non-goals for version 1
 
@@ -835,7 +835,7 @@ services.withings2garmin.group                    string, default "withings2garm
 services.withings2garmin.withings.clientId        string
 services.withings2garmin.withings.clientSecretFile absolute path string
 services.withings2garmin.withings.redirectUri     string
-services.withings2garmin.schedule                 string, default "hourly"
+services.withings2garmin.schedule                 string, default "*-*-* 0/3:00:00"
 services.withings2garmin.randomizedDelaySec       string, default "5m"
 services.withings2garmin.initialLookback          string, default "720h"
 services.withings2garmin.includeAmbiguous         bool, default false

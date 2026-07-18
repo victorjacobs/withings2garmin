@@ -52,7 +52,7 @@ Use secret-manager paths appropriate to the service user. Do not put secrets in 
 }
 ```
 
-The module creates `/var/lib/withings2garmin` with restrictive ownership, injects the Withings secret through a systemd credential, and schedules an hourly hardened oneshot service. Stop the timer during bootstrap if required.
+The module creates `/var/lib/withings2garmin` with restrictive ownership, injects the Withings secret through a systemd credential, and schedules a hardened oneshot service every three hours. Stop the timer during bootstrap if required.
 
 ## Recovery
 
