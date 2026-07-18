@@ -63,7 +63,11 @@ func (a *Authenticator) Login(ctx context.Context, credentials Credentials) (Tok
 	return tokens, nil
 }
 
-func (a *Authenticator) mobileTicket(ctx context.Context, client *http.Client, credentials Credentials) (string, string, error) {
+func (a *Authenticator) mobileTicket(
+	ctx context.Context,
+	client *http.Client,
+	credentials Credentials,
+) (string, string, error) {
 	parameters := url.Values{
 		"clientId": {iosSSOClientID},
 		"locale":   {"en-US"},
@@ -116,10 +120,10 @@ func (a *Authenticator) mobileTicket(ctx context.Context, client *http.Client, c
 	}
 	switch result.ResponseStatus.Type {
 	case "SUCCESSFUL":
-		if result.ResponseStatus.ServiceTicketID == "" {
+		if result.ServiceTicketID == "" {
 			return "", "", fmt.Errorf("mobile login: %w: missing service ticket", ErrProtocol)
 		}
-		return result.ResponseStatus.ServiceTicketID, iosServiceURL, nil
+		return result.ServiceTicketID, iosServiceURL, nil
 	case "INVALID_USERNAME_PASSWORD":
 		return "", "", ErrInvalidCredentials
 	case "MFA_REQUIRED":
@@ -181,8 +185,8 @@ func (a *Authenticator) exchangeTicket(ctx context.Context, ticket, serviceURL s
 }
 
 type loginResponse struct {
-	ResponseStatus struct {
-		Type            string `json:"type"`
-		ServiceTicketID string `json:"serviceTicketId"`
+	ServiceTicketID string `json:"serviceTicketId"`
+	ResponseStatus  struct {
+		Type string `json:"type"`
 	} `json:"responseStatus"`
 }

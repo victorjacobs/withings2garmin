@@ -38,7 +38,11 @@ func (runtime *Runtime) recordIgnored(syncState *state.SyncState, group withings
 	}
 }
 
-func (runtime *Runtime) recordConflict(syncState *state.SyncState, measurement withings.WeightMeasurement, fingerprint, reason string) {
+func (runtime *Runtime) recordConflict(
+	syncState *state.SyncState,
+	measurement withings.WeightMeasurement,
+	fingerprint, reason string,
+) {
 	runtime.recordTerminal(syncState, measurement, fingerprint, state.LedgerConflict, reason)
 }
 

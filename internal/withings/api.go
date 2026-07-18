@@ -73,7 +73,14 @@ func (client *Client) FetchMeasurements(ctx context.Context, accessToken string,
 	var candidateCursor int64
 	for page := 0; page < maximumPages; page++ {
 		envelope := measureEnvelope{}
-		if err := client.postForm(ctx, client.measureURL, accessToken, values, client.measureBodyLimit, &envelope); err != nil {
+		if err := client.postForm(
+			ctx,
+			client.measureURL,
+			accessToken,
+			values,
+			client.measureBodyLimit,
+			&envelope,
+		); err != nil {
 			return FetchResult{}, fmt.Errorf("fetch Withings measurements: %w", err)
 		}
 		result.PageCount++
@@ -115,7 +122,13 @@ func (client *Client) FetchMeasurements(ctx context.Context, accessToken string,
 	return FetchResult{}, fmt.Errorf("%w: measurement page limit exceeded", ErrProtocol)
 }
 
-func (client *Client) postForm(ctx context.Context, endpoint, bearer string, values url.Values, limit int64, destination any) error {
+func (client *Client) postForm(
+	ctx context.Context,
+	endpoint, bearer string,
+	values url.Values,
+	limit int64,
+	destination any,
+) error {
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(values.Encode()))
 	if err != nil {
 		return fmt.Errorf("create request: %w", err)

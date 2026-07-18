@@ -45,12 +45,19 @@ func TestExchangeAndRefresh(t *testing.T) {
 		if request.Form.Get("grant_type") == "refresh_token" && request.Form.Get("refresh_token") != "refresh" {
 			t.Fatal("missing refresh")
 		}
-		_, _ = response.Write([]byte(`{"status":0,"body":{"userid":"u","access_token":"access","refresh_token":"refresh-next","scope":"user.metrics","token_type":"Bearer","expires_in":10800}}`))
+		_, _ = response.Write([]byte(`{"status":0,"body":{` +
+			`"userid":"u","access_token":"access","refresh_token":"refresh-next",` +
+			`"scope":"user.metrics","token_type":"Bearer","expires_in":10800}}`))
 	}))
 	defer server.Close()
 	client := NewClient(server.Client())
 	client.now = func() time.Time { return time.Unix(100, 0) }
-	config := OAuthConfig{ClientID: "id", ClientSecret: "secret", RedirectURI: "https://example.test/callback", TokenURL: server.URL}
+	config := OAuthConfig{
+		ClientID:     "id",
+		ClientSecret: "secret",
+		RedirectURI:  "https://example.test/callback",
+		TokenURL:     server.URL,
+	}
 	token, err := client.ExchangeCode(context.Background(), config, "code")
 	if err != nil {
 		t.Fatal(err)

@@ -18,17 +18,28 @@ func TestFetchMeasurementsPaginates(t *testing.T) {
 		if request.Header.Get("Authorization") != "Bearer access" {
 			t.Fatal("authorization missing")
 		}
-		if request.Form.Get("action") != "getmeas" || request.Form.Get("meastype") != "1" || request.Form.Get("category") != "1" {
+		if request.Form.Get("action") != "getmeas" ||
+			request.Form.Get("meastype") != "1" ||
+			request.Form.Get("category") != "1" {
 			t.Fatalf("unexpected form %v", request.Form)
 		}
 		if requests == 1 {
-			_, _ = response.Write([]byte(`{"status":0,"body":{"updatetime":200,"more":1,"offset":42,"measuregrps":[{"grpid":1,"category":1,"date":100,"created":100,"modified":101,"attrib":0,"deviceid":"d","model":"m","timezone":"Europe/Brussels","measures":[{"type":1,"value":75420,"unit":-3}]}]}}`))
+			_, _ = response.Write([]byte(`{"status":0,"body":{` +
+				`"updatetime":200,"more":1,"offset":42,"measuregrps":[{` +
+				`"grpid":1,"category":1,"date":100,"created":100,"modified":101,` +
+				`"attrib":0,"deviceid":"d","model":"m","timezone":"Europe/Brussels",` +
+				`"measures":[{"type":1,"value":75420,"unit":-3}]` +
+				`}]}}`))
 			return
 		}
 		if request.Form.Get("offset") != "42" {
 			t.Fatalf("offset=%q", request.Form.Get("offset"))
 		}
-		_, _ = response.Write([]byte(`{"status":0,"body":{"updatetime":199,"more":0,"measuregrps":[{"grpid":2,"category":1,"date":102,"created":102,"modified":102,"attrib":8,"deviceid":9,"model":12,"measures":[{"type":1,"value":800,"unit":-1}]}]}}`))
+		_, _ = response.Write([]byte(`{"status":0,"body":{` +
+			`"updatetime":199,"more":0,"measuregrps":[{` +
+			`"grpid":2,"category":1,"date":102,"created":102,"modified":102,` +
+			`"attrib":8,"deviceid":9,"model":12,"measures":[{"type":1,"value":800,"unit":-1}]` +
+			`}]}}`))
 	}))
 	defer server.Close()
 	client := NewClient(server.Client())
@@ -56,10 +67,21 @@ func TestWeightConversionAndAttribution(t *testing.T) {
 	if err != nil || grams != 1 {
 		t.Fatalf("grams=%d err=%v", grams, err)
 	}
-	if FilterAttribution(1, false) != AttributionAmbiguous || FilterAttribution(1, true) != AttributionAccepted || FilterAttribution(2, true) != AttributionManual {
+	if FilterAttribution(1, false) != AttributionAmbiguous ||
+		FilterAttribution(1, true) != AttributionAccepted ||
+		FilterAttribution(2, true) != AttributionManual {
 		t.Fatal("unexpected attribution filtering")
 	}
-	group := MeasureGroup{GroupID: 1, Category: 1, MeasuredAt: time.Now(), Measures: []Measure{{Type: 1, Value: 1, Unit: 3}}}
+	group := MeasureGroup{
+		GroupID:    1,
+		Category:   1,
+		MeasuredAt: time.Now(),
+		Measures: []Measure{{
+			Type:  1,
+			Value: 1,
+			Unit:  3,
+		}},
+	}
 	if _, err := WeightFromGroup(group); err == nil {
 		t.Fatal("expected impossible weight rejection")
 	}

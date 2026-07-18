@@ -21,7 +21,10 @@ func TestUploadWeightRequestPreservesLocalAndUTC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := `{"dateTimestamp":"2026-07-18T08:12:34.000","gmtTimestamp":"2026-07-18T06:12:34.000","unitKey":"kg","sourceType":"MANUAL","value":75.42}` + "\n"
+	want := "{" +
+		`"dateTimestamp":"2026-07-18T08:12:34.000",` +
+		`"gmtTimestamp":"2026-07-18T06:12:34.000",` +
+		`"unitKey":"kg","sourceType":"MANUAL","value":75.42}` + "\n"
 	if string(body) != want {
 		t.Fatalf("body = %s, want %s", body, want)
 	}
@@ -45,7 +48,13 @@ func TestClientUploadWeightContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := client.UploadWeight(context.Background(), "access", time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC), time.UTC, 70000); err != nil {
+	if err := client.UploadWeight(
+		context.Background(),
+		"access",
+		time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
+		time.UTC,
+		70000,
+	); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -74,7 +83,10 @@ func TestRefreshContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := client.Refresh(context.Background(), TokenSet{ClientID: "GARMIN_CONNECT_MOBILE_ANDROID_DI", RefreshToken: "refresh"})
+	got, err := client.Refresh(context.Background(), TokenSet{
+		ClientID:     "GARMIN_CONNECT_MOBILE_ANDROID_DI",
+		RefreshToken: "refresh",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +96,9 @@ func TestRefreshContract(t *testing.T) {
 }
 
 func TestDecodeWeightSamplesVariants(t *testing.T) {
-	body := []byte(`{"dailyWeightSummaries":[{"weight": "75.42", "gmtTimestamp":"2026-07-18T06:12:34.000", "samplePk": 123}]}`)
+	body := []byte(`{"dailyWeightSummaries":[` +
+		`{"weight":"75.42","gmtTimestamp":"2026-07-18T06:12:34.000","samplePk":123}` +
+		`]}`)
 	samples, err := decodeWeightSamples(body)
 	if err != nil {
 		t.Fatal(err)
@@ -96,5 +110,11 @@ func TestDecodeWeightSamplesVariants(t *testing.T) {
 
 func testJWT(clientID string, expiresAt int64) string {
 	encode := func(value string) string { return base64.RawURLEncoding.EncodeToString([]byte(value)) }
-	return strings.Join([]string{encode(`{"alg":"none"}`), encode(fmt.Sprintf(`{"client_id":%q,"exp":%d}`, clientID, expiresAt)), "signature"}, ".")
+	parts := []string{
+		encode(`{"alg":"none"}`),
+		encode(fmt.Sprintf(`{"client_id":%q,"exp":%d}`, clientID, expiresAt)),
+		"signature",
+	}
+
+	return strings.Join(parts, ".")
 }

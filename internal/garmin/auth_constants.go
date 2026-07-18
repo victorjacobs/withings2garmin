@@ -3,7 +3,8 @@ package garmin
 // Garmin Connect is an unofficial API. Values below were researched 2026-07-18
 // against python-garminconnect 2ae0eb5 and ha-garmin 67ba9c9.
 const (
-	mobileSSOUserAgent   = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+	mobileSSOUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) " +
+		"AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
 	defaultSSOBase       = "https://sso.garmin.com"
 	defaultAPIBase       = "https://connectapi.garmin.com"
 	defaultDIBase        = "https://diauth.garmin.com"

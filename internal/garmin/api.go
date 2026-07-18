@@ -66,7 +66,8 @@ func (c *Client) DayView(ctx context.Context, accessToken string, localDate time
 }
 
 func (c *Client) DateRange(ctx context.Context, accessToken string, start, end time.Time) ([]WeightSample, error) {
-	endpoint := "/weight-service/weight/dateRange?startDate=" + start.Format("2006-01-02") + "&endDate=" + end.Format("2006-01-02")
+	endpoint := "/weight-service/weight/dateRange?startDate=" + start.Format("2006-01-02") +
+		"&endDate=" + end.Format("2006-01-02")
 	body, err := c.doAPI(ctx, http.MethodGet, endpoint, nil, accessToken)
 	if err != nil {
 		return nil, err
@@ -79,7 +80,13 @@ func (c *Client) DateRange(ctx context.Context, accessToken string, start, end t
 	return samples, nil
 }
 
-func (c *Client) UploadWeight(ctx context.Context, accessToken string, measuredAt time.Time, location *time.Location, grams int64) error {
+func (c *Client) UploadWeight(
+	ctx context.Context,
+	accessToken string,
+	measuredAt time.Time,
+	location *time.Location,
+	grams int64,
+) error {
 	body, err := marshalWeightUpload(measuredAt, location, grams)
 	if err != nil {
 		return err
@@ -190,7 +197,10 @@ func resolveEndpoint(base *url.URL, endpoint string) string {
 
 func setNativeHeaders(headers http.Header) {
 	headers.Set("User-Agent", "GCM-Android-5.23")
-	headers.Set("X-Garmin-User-Agent", "com.garmin.android.apps.connectmobile/5.23; ; Google/sdk_gphone64_arm64/google; Android/33; Dalvik/2.1.0")
+	headers.Set(
+		"X-Garmin-User-Agent",
+		"com.garmin.android.apps.connectmobile/5.23; ; Google/sdk_gphone64_arm64/google; Android/33; Dalvik/2.1.0",
+	)
 	headers.Set("X-Garmin-Paired-App-Version", "10861")
 	headers.Set("X-Garmin-Client-Platform", "Android")
 	headers.Set("X-App-Ver", "10861")

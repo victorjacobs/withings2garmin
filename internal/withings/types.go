@@ -123,7 +123,11 @@ func WeightFromGroup(group MeasureGroup) (WeightMeasurement, error) {
 			continue
 		}
 		if weight != nil {
-			return WeightMeasurement{}, fmt.Errorf("%w: group %d has multiple weight measures", ErrInvalidMeasurement, group.GroupID)
+			return WeightMeasurement{}, fmt.Errorf(
+				"%w: group %d has multiple weight measures",
+				ErrInvalidMeasurement,
+				group.GroupID,
+			)
 		}
 		weight = &group.Measures[index]
 	}
@@ -136,7 +140,11 @@ func WeightFromGroup(group MeasureGroup) (WeightMeasurement, error) {
 		return WeightMeasurement{}, fmt.Errorf("group %d: %w", group.GroupID, err)
 	}
 	if grams < MinimumWeightGram || grams > MaximumWeightGram {
-		return WeightMeasurement{}, fmt.Errorf("%w: group %d is outside the supported range", ErrInvalidMeasurement, group.GroupID)
+		return WeightMeasurement{}, fmt.Errorf(
+			"%w: group %d is outside the supported range",
+			ErrInvalidMeasurement,
+			group.GroupID,
+		)
 	}
 
 	return WeightMeasurement{

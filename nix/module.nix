@@ -1,32 +1,84 @@
-self: { config, lib, pkgs, ... }:
-let
+self: {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.services.withings2garmin;
   inherit (lib) mkEnableOption mkIf mkOption types;
-  package = if cfg.package == null then self.packages.${pkgs.system}.default else cfg.package;
+  package =
+    if cfg.package == null
+    then self.packages.${pkgs.system}.default
+    else cfg.package;
 in {
   options.services.withings2garmin = {
     enable = mkEnableOption "Withings to Garmin weight synchronization";
-    package = mkOption { type = types.nullOr types.package; default = null; };
-    user = mkOption { type = types.str; default = "withings2garmin"; };
-    group = mkOption { type = types.str; default = "withings2garmin"; };
-    withings = {
-      clientId = mkOption { type = types.str; default = ""; };
-      clientSecretFile = mkOption { type = types.str; default = ""; };
-      redirectUri = mkOption { type = types.str; default = ""; };
+    package = mkOption {
+      type = types.nullOr types.package;
+      default = null;
     };
-    schedule = mkOption { type = types.str; default = "hourly"; };
-    randomizedDelaySec = mkOption { type = types.str; default = "5m"; };
-    initialLookback = mkOption { type = types.str; default = "720h"; };
-    includeAmbiguous = mkOption { type = types.bool; default = false; };
-    logLevel = mkOption { type = types.enum [ "debug" "info" "warn" "error" ]; default = "info"; };
+    user = mkOption {
+      type = types.str;
+      default = "withings2garmin";
+    };
+    group = mkOption {
+      type = types.str;
+      default = "withings2garmin";
+    };
+    withings = {
+      clientId = mkOption {
+        type = types.str;
+        default = "";
+      };
+      clientSecretFile = mkOption {
+        type = types.str;
+        default = "";
+      };
+      redirectUri = mkOption {
+        type = types.str;
+        default = "";
+      };
+    };
+    schedule = mkOption {
+      type = types.str;
+      default = "hourly";
+    };
+    randomizedDelaySec = mkOption {
+      type = types.str;
+      default = "5m";
+    };
+    initialLookback = mkOption {
+      type = types.str;
+      default = "720h";
+    };
+    includeAmbiguous = mkOption {
+      type = types.bool;
+      default = false;
+    };
+    logLevel = mkOption {
+      type = types.enum ["debug" "info" "warn" "error"];
+      default = "info";
+    };
   };
 
   config = mkIf cfg.enable {
     assertions = [
-      { assertion = cfg.withings.clientId != ""; message = "services.withings2garmin.withings.clientId is required"; }
-      { assertion = cfg.withings.redirectUri != ""; message = "services.withings2garmin.withings.redirectUri is required"; }
-      { assertion = cfg.withings.clientSecretFile != ""; message = "services.withings2garmin.withings.clientSecretFile is required"; }
-      { assertion = !(lib.hasPrefix "/nix/store/" cfg.withings.clientSecretFile); message = "Withings secret must not be in /nix/store"; }
+      {
+        assertion = cfg.withings.clientId != "";
+        message = "services.withings2garmin.withings.clientId is required";
+      }
+      {
+        assertion = cfg.withings.redirectUri != "";
+        message = "services.withings2garmin.withings.redirectUri is required";
+      }
+      {
+        assertion = cfg.withings.clientSecretFile != "";
+        message = "services.withings2garmin.withings.clientSecretFile is required";
+      }
+      {
+        assertion = !(lib.hasPrefix "/nix/store/" cfg.withings.clientSecretFile);
+        message = "Withings secret must not be in /nix/store";
+      }
     ];
 
     users.groups.${cfg.group} = {};
@@ -37,11 +89,11 @@ in {
       createHome = true;
     };
 
-    systemd.tmpfiles.rules = [ "d /var/lib/withings2garmin 0700 ${cfg.user} ${cfg.group} -" ];
+    systemd.tmpfiles.rules = ["d /var/lib/withings2garmin 0700 ${cfg.user} ${cfg.group} -"];
     systemd.services.withings2garmin = {
       description = "Withings to Garmin weight synchronization";
-      wants = [ "network-online.target" ];
-      after = [ "network-online.target" ];
+      wants = ["network-online.target"];
+      after = ["network-online.target"];
       serviceConfig = {
         Type = "oneshot";
         User = cfg.user;
@@ -49,7 +101,7 @@ in {
         StateDirectory = "withings2garmin";
         StateDirectoryMode = "0700";
         UMask = "0077";
-        LoadCredential = [ "withings-client-secret:${cfg.withings.clientSecretFile}" ];
+        LoadCredential = ["withings-client-secret:${cfg.withings.clientSecretFile}"];
         NoNewPrivileges = true;
         PrivateTmp = true;
         PrivateDevices = true;
@@ -61,7 +113,7 @@ in {
         RestrictSUIDSGID = true;
         LockPersonality = true;
         MemoryDenyWriteExecute = true;
-        RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
+        RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6"];
       };
       script = ''
         exec ${package}/bin/withings2garmin --state-dir /var/lib/withings2garmin --log-level ${cfg.logLevel} sync \\
@@ -72,7 +124,7 @@ in {
       '';
     };
     systemd.timers.withings2garmin = {
-      wantedBy = [ "timers.target" ];
+      wantedBy = ["timers.target"];
       timerConfig = {
         OnCalendar = cfg.schedule;
         Persistent = true;

@@ -151,7 +151,10 @@ func (client *Client) requestToken(ctx context.Context, config OAuthConfig, valu
 	if envelope.Status != 0 {
 		return Token{}, &APIError{Status: envelope.Status}
 	}
-	if envelope.Body.UserID == "" || envelope.Body.AccessToken == "" || envelope.Body.RefreshToken == "" || envelope.Body.ExpiresIn <= 0 {
+	if envelope.Body.UserID == "" ||
+		envelope.Body.AccessToken == "" ||
+		envelope.Body.RefreshToken == "" ||
+		envelope.Body.ExpiresIn <= 0 {
 		return Token{}, fmt.Errorf("%w: token response omitted required fields", ErrProtocol)
 	}
 
