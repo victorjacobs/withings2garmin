@@ -114,10 +114,10 @@ in {
         RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6"];
       };
       script = ''
-        exec ${package}/bin/withings2garmin --state-dir /var/lib/withings2garmin --log-level ${cfg.logLevel} sync \\
-          --client-id '${cfg.withings.clientId}' \\
-          --client-secret-file "$CREDENTIALS_DIRECTORY/withings-client-secret" \\
-          --initial-lookback '${cfg.initialLookback}' \\
+        exec ${package}/bin/withings2garmin --state-dir /var/lib/withings2garmin --log-level ${cfg.logLevel} sync \
+          --client-id '${cfg.withings.clientId}' \
+          --client-secret-file "$CREDENTIALS_DIRECTORY/withings-client-secret" \
+          --initial-lookback '${cfg.initialLookback}' \
           ${lib.optionalString cfg.includeAmbiguous "--include-ambiguous"}
       '';
     };
