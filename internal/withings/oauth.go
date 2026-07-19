@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -134,12 +135,12 @@ func (client *Client) RefreshToken(ctx context.Context, config OAuthConfig, refr
 type tokenEnvelope struct {
 	Status int `json:"status"`
 	Body   struct {
-		UserID       string `json:"userid"`
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		Scope        string `json:"scope"`
-		TokenType    string `json:"token_type"`
-		ExpiresIn    int64  `json:"expires_in"`
+		UserID       json.RawMessage `json:"userid"`
+		AccessToken  string          `json:"access_token"`
+		RefreshToken string          `json:"refresh_token"`
+		Scope        string          `json:"scope"`
+		TokenType    string          `json:"token_type"`
+		ExpiresIn    int64           `json:"expires_in"`
 	} `json:"body"`
 }
 
@@ -151,7 +152,12 @@ func (client *Client) requestToken(ctx context.Context, config OAuthConfig, valu
 	if envelope.Status != 0 {
 		return Token{}, &APIError{Status: envelope.Status}
 	}
-	if envelope.Body.UserID == "" ||
+
+	userID, err := rawString(envelope.Body.UserID)
+	if err != nil {
+		return Token{}, fmt.Errorf("%w: invalid token user ID: %v", ErrProtocol, err)
+	}
+	if userID == "" ||
 		envelope.Body.AccessToken == "" ||
 		envelope.Body.RefreshToken == "" ||
 		envelope.Body.ExpiresIn <= 0 {
@@ -161,7 +167,7 @@ func (client *Client) requestToken(ctx context.Context, config OAuthConfig, valu
 	now := client.now().UTC()
 	return Token{
 		SchemaVersion: 1,
-		UserID:        envelope.Body.UserID,
+		UserID:        userID,
 		AccessToken:   envelope.Body.AccessToken,
 		RefreshToken:  envelope.Body.RefreshToken,
 		Scope:         envelope.Body.Scope,

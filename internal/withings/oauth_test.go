@@ -45,8 +45,12 @@ func TestExchangeAndRefresh(t *testing.T) {
 		if request.Form.Get("grant_type") == "refresh_token" && request.Form.Get("refresh_token") != "refresh" {
 			t.Fatal("missing refresh")
 		}
+		userID := `"u"`
+		if request.Form.Get("grant_type") == "refresh_token" {
+			userID = "123456"
+		}
 		_, _ = response.Write([]byte(`{"status":0,"body":{` +
-			`"userid":"u","access_token":"access","refresh_token":"refresh-next",` +
+			`"userid":` + userID + `,"access_token":"access","refresh_token":"refresh-next",` +
 			`"scope":"user.metrics","token_type":"Bearer","expires_in":10800}}`))
 	}))
 	defer server.Close()
@@ -65,7 +69,11 @@ func TestExchangeAndRefresh(t *testing.T) {
 	if token.ExpiresAt != time.Unix(10900, 0).UTC() {
 		t.Fatalf("expiry %v", token.ExpiresAt)
 	}
-	if _, err := client.RefreshToken(context.Background(), config, "refresh"); err != nil {
+	refreshed, err := client.RefreshToken(context.Background(), config, "refresh")
+	if err != nil {
 		t.Fatal(err)
+	}
+	if refreshed.UserID != "123456" {
+		t.Fatalf("user ID %q", refreshed.UserID)
 	}
 }
