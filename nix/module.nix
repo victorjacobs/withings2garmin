@@ -4,14 +4,14 @@ self: {
   pkgs,
   ...
 }: let
-  cfg = config.services.withings2garmin;
+  cfg = config.services.garmin-import;
   inherit (lib) mkEnableOption mkIf mkOption types;
   package =
     if cfg.package == null
     then self.packages.${pkgs.system}.default
     else cfg.package;
 in {
-  options.services.withings2garmin = {
+  options.services.garmin-import = {
     enable = mkEnableOption "Withings to Garmin weight synchronization";
     package = mkOption {
       type = types.nullOr types.package;
@@ -19,11 +19,11 @@ in {
     };
     user = mkOption {
       type = types.str;
-      default = "withings2garmin";
+      default = "garmin-import";
     };
     group = mkOption {
       type = types.str;
-      default = "withings2garmin";
+      default = "garmin-import";
     };
     withings = {
       clientId = mkOption {
@@ -65,15 +65,15 @@ in {
     assertions = [
       {
         assertion = cfg.withings.clientId != "";
-        message = "services.withings2garmin.withings.clientId is required";
+        message = "services.garmin-import.withings.clientId is required";
       }
       {
         assertion = cfg.withings.redirectUri != "";
-        message = "services.withings2garmin.withings.redirectUri is required";
+        message = "services.garmin-import.withings.redirectUri is required";
       }
       {
         assertion = cfg.withings.clientSecretFile != "";
-        message = "services.withings2garmin.withings.clientSecretFile is required";
+        message = "services.garmin-import.withings.clientSecretFile is required";
       }
       {
         assertion = !(lib.hasPrefix "/nix/store/" cfg.withings.clientSecretFile);
@@ -87,8 +87,8 @@ in {
       group = cfg.group;
     };
 
-    systemd.tmpfiles.rules = ["d /var/lib/withings2garmin 0700 ${cfg.user} ${cfg.group} -"];
-    systemd.services.withings2garmin = {
+    systemd.tmpfiles.rules = ["d /var/lib/garmin-import 0700 ${cfg.user} ${cfg.group} -"];
+    systemd.services.garmin-import = {
       description = "Withings to Garmin weight synchronization";
       wants = ["network-online.target"];
       after = ["network-online.target"];
@@ -96,7 +96,7 @@ in {
         Type = "oneshot";
         User = cfg.user;
         Group = cfg.group;
-        StateDirectory = "withings2garmin";
+        StateDirectory = "garmin-import";
         StateDirectoryMode = "0700";
         UMask = "0077";
         LoadCredential = ["withings-client-secret:${cfg.withings.clientSecretFile}"];
@@ -114,20 +114,20 @@ in {
         RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6"];
       };
       script = ''
-        exec ${package}/bin/withings2garmin --state-dir /var/lib/withings2garmin --log-level ${cfg.logLevel} sync \
+        exec ${package}/bin/garmin-import --state-dir /var/lib/garmin-import --log-level ${cfg.logLevel} sync \
           --client-id '${cfg.withings.clientId}' \
           --client-secret-file "$CREDENTIALS_DIRECTORY/withings-client-secret" \
           --initial-lookback '${cfg.initialLookback}' \
           ${lib.optionalString cfg.includeAmbiguous "--include-ambiguous"}
       '';
     };
-    systemd.timers.withings2garmin = {
+    systemd.timers.garmin-import = {
       wantedBy = ["timers.target"];
       timerConfig = {
         OnCalendar = cfg.schedule;
         Persistent = true;
         RandomizedDelaySec = cfg.randomizedDelaySec;
-        Unit = "withings2garmin.service";
+        Unit = "garmin-import.service";
       };
     };
   };

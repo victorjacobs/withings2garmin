@@ -6,11 +6,11 @@ import (
 )
 
 func TestResolveStateDir(t *testing.T) {
-	directory, err := ResolveStateDir("/var/lib/withings2garmin/../withings2garmin")
+	directory, err := ResolveStateDir("/var/lib/garmin-import/../garmin-import")
 	if err != nil {
 		t.Fatalf("ResolveStateDir() error = %v", err)
 	}
-	if directory != "/var/lib/withings2garmin" {
+	if directory != "/var/lib/garmin-import" {
 		t.Fatalf("ResolveStateDir() = %q", directory)
 	}
 

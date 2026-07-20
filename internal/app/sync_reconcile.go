@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/victorjacobs/withings2garmin/internal/state"
-	"github.com/victorjacobs/withings2garmin/internal/withings"
+	"github.com/victorjacobs/garmin-import/internal/state"
+	"github.com/victorjacobs/garmin-import/internal/withings"
 )
 
 func (runtime *Runtime) syncMeasurements(

@@ -1,4 +1,4 @@
-# withings2garmin
+# garmin-import
 
 Weight-only synchronization from a Withings scale to Garmin Connect. It is one Go binary with a Nix-first development environment; Garmin Connect endpoints are unofficial and may change.
 
@@ -18,17 +18,17 @@ The flake supplies Go and all development tools. No host Go installation is requ
 Register a personal Withings Public API application with the `user.metrics` scope, then authenticate as the account which owns the state directory:
 
 ```sh
-sudo -u withings2garmin withings2garmin --state-dir /var/lib/withings2garmin auth withings \
+sudo -u garmin-import garmin-import --state-dir /var/lib/garmin-import auth withings \
   --client-id YOUR_CLIENT_ID \
   --client-secret-file /run/secrets/withings-client-secret \
   --redirect-uri http://127.0.0.1:8080/callback
 
-sudo -u withings2garmin withings2garmin --state-dir /var/lib/withings2garmin auth garmin \
+sudo -u garmin-import garmin-import --state-dir /var/lib/garmin-import auth garmin \
   --email-file /run/secrets/garmin-email \
   --password-file /run/secrets/garmin-password
 
-sudo -u withings2garmin withings2garmin --state-dir /var/lib/withings2garmin status --check
-sudo -u withings2garmin withings2garmin --state-dir /var/lib/withings2garmin sync --dry-run \
+sudo -u garmin-import garmin-import --state-dir /var/lib/garmin-import status --check
+sudo -u garmin-import garmin-import --state-dir /var/lib/garmin-import sync --dry-run \
   --client-id YOUR_CLIENT_ID --client-secret-file /run/secrets/withings-client-secret
 ```
 
@@ -40,8 +40,8 @@ Use secret-manager paths appropriate to the service user. Do not put secrets in 
 
 ```nix
 {
-  imports = [ inputs.withings2garmin.nixosModules.default ];
-  services.withings2garmin = {
+  imports = [ inputs.garmin-import.nixosModules.default ];
+  services.garmin-import = {
     enable = true;
     withings = {
       clientId = "your-public-client-id";
@@ -52,7 +52,7 @@ Use secret-manager paths appropriate to the service user. Do not put secrets in 
 }
 ```
 
-The module creates `/var/lib/withings2garmin` with restrictive ownership, injects the Withings secret through a systemd credential, and schedules a hardened oneshot service every three hours. Stop the timer during bootstrap if required.
+The module creates `/var/lib/garmin-import` with restrictive ownership, injects the Withings secret through a systemd credential, and schedules a hardened oneshot service every three hours. Stop the timer during bootstrap if required.
 
 ## Recovery
 

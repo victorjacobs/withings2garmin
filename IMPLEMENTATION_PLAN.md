@@ -1,4 +1,4 @@
-# withings2garmin implementation plan
+# garmin-import implementation plan
 
 Research snapshot: 2026-07-18.
 
@@ -151,7 +151,7 @@ Create this structure. Small adjustments are fine, but preserve the boundaries:
 ├── go.mod
 ├── go.sum
 ├── cmd/
-│   └── withings2garmin/
+│   └── garmin-import/
 │       └── main.go
 ├── internal/
 │   ├── app/
@@ -253,14 +253,14 @@ Use the standard `flag` package with explicit subcommand `FlagSet`s. Cobra is un
 Global behavior:
 
 ```text
-withings2garmin [--state-dir PATH] [--log-level LEVEL] COMMAND
+garmin-import [--state-dir PATH] [--log-level LEVEL] COMMAND
 ```
 
 Default state directory:
 
-- `$XDG_STATE_HOME/withings2garmin` when set.
-- Otherwise `~/.local/state/withings2garmin`.
-- The NixOS service always passes `/var/lib/withings2garmin` through systemd's state-directory specifier.
+- `$XDG_STATE_HOME/garmin-import` when set.
+- Otherwise `~/.local/state/garmin-import`.
+- The NixOS service always passes `/var/lib/garmin-import` through systemd's state-directory specifier.
 
 Commands:
 
@@ -529,7 +529,7 @@ client_id=<stored_client_id>
 refresh_token=<stored_refresh_token>
 ```
 
-On success atomically store the returned access token and returned/previous refresh token before retrying the API request. Only one refresh and one API retry are allowed per request. If refresh is invalid, return exit code 3 with `run 'withings2garmin auth garmin' interactively`; never fall back to stored account credentials.
+On success atomically store the returned access token and returned/previous refresh token before retrying the API request. Only one refresh and one API retry are allowed per request. If refresh is invalid, return exit code 3 with `run 'garmin-import auth garmin' interactively`; never fall back to stored account credentials.
 
 ## 8. Withings implementation
 
@@ -618,7 +618,7 @@ Inside the state directory:
 withings-tokens.json     mode 0600
 garmin-tokens.json       mode 0600
 sync-state.json          mode 0600
-withings2garmin.lock     mode 0600
+garmin-import.lock     mode 0600
 ```
 
 The directory is mode 0700. Refuse to operate if a state path is a symlink. Warn and tighten overly broad modes when owned by the current user; fail if ownership is unexpected.
@@ -808,14 +808,14 @@ Set no secret environment variables in the flake.
 
 Package with `buildGoModule`:
 
-- `pname = "withings2garmin"`.
+- `pname = "garmin-import"`.
 - Version injected from a source version or `0.1.0` initially.
 - `src` filtered to exclude `.git`, local state, and result symlinks.
 - Fixed `vendorHash` generated after `go.mod/go.sum` settle.
 - `CGO_ENABLED=0` using the current nixpkgs-supported `env.CGO_ENABLED = "0"` form.
 - `ldflags` inject version, revision, and build date variables without making the derivation depend on wall-clock time. Use a reproducible source date.
 - `doCheck = true`; normal unit tests run in the package build.
-- `meta.mainProgram = "withings2garmin"`.
+- `meta.mainProgram = "garmin-import"`.
 
 Checks should include the package, unit tests, formatting/lint where practical, and evaluation of a minimal NixOS configuration importing `nixosModules.default`.
 
@@ -828,18 +828,18 @@ Expose `nixosModules.default` from `nix/module.nix`.
 Use this interface:
 
 ```text
-services.withings2garmin.enable                   bool
-services.withings2garmin.package                  package
-services.withings2garmin.user                     string, default "withings2garmin"
-services.withings2garmin.group                    string, default "withings2garmin"
-services.withings2garmin.withings.clientId        string
-services.withings2garmin.withings.clientSecretFile absolute path string
-services.withings2garmin.withings.redirectUri     string
-services.withings2garmin.schedule                 string, default "*-*-* 0/3:00:00"
-services.withings2garmin.randomizedDelaySec       string, default "5m"
-services.withings2garmin.initialLookback          string, default "720h"
-services.withings2garmin.includeAmbiguous         bool, default false
-services.withings2garmin.logLevel                 enum debug|info|warn|error, default info
+services.garmin-import.enable                   bool
+services.garmin-import.package                  package
+services.garmin-import.user                     string, default "garmin-import"
+services.garmin-import.group                    string, default "garmin-import"
+services.garmin-import.withings.clientId        string
+services.garmin-import.withings.clientSecretFile absolute path string
+services.garmin-import.withings.redirectUri     string
+services.garmin-import.schedule                 string, default "*-*-* 0/3:00:00"
+services.garmin-import.randomizedDelaySec       string, default "5m"
+services.garmin-import.initialLookback          string, default "720h"
+services.garmin-import.includeAmbiguous         bool, default false
+services.garmin-import.logLevel                 enum debug|info|warn|error, default info
 ```
 
 Assertions:
@@ -859,14 +859,14 @@ Create a fixed system user/group rather than `DynamicUser`. A fixed user makes i
 The service uses:
 
 ```text
-User=withings2garmin
-Group=withings2garmin
-StateDirectory=withings2garmin
+User=garmin-import
+Group=garmin-import
+StateDirectory=garmin-import
 StateDirectoryMode=0700
 UMask=0077
 ```
 
-Also add a tmpfiles rule that creates `/var/lib/withings2garmin` as `0700` with the configured user/group during activation. This makes the directory available for interactive authentication before the timer's first service invocation; `StateDirectory` remains the service-side ownership/hardening declaration. The administrator should persist `/var/lib/withings2garmin` on impermanent systems.
+Also add a tmpfiles rule that creates `/var/lib/garmin-import` as `0700` with the configured user/group during activation. This makes the directory available for interactive authentication before the timer's first service invocation; `StateDirectory` remains the service-side ownership/hardening declaration. The administrator should persist `/var/lib/garmin-import` on impermanent systems.
 
 ### 13.3 Credential injection
 
@@ -911,7 +911,7 @@ Define a timer:
 OnCalendar=<schedule>
 Persistent=true
 RandomizedDelaySec=<configured>
-Unit=withings2garmin.service
+Unit=garmin-import.service
 WantedBy=timers.target
 ```
 
@@ -929,7 +929,7 @@ Document a two-stage deployment:
 6. Run one real `sync`.
 7. Enable/start the timer.
 
-Provide concrete `sudo -u withings2garmin` examples, but do not assume secrets are readable by arbitrary users. Note that the exact command depends on the operator's secret manager.
+Provide concrete `sudo -u garmin-import` examples, but do not assume secrets are readable by arbitrary users. Note that the exact command depends on the operator's secret manager.
 
 ## 14. Testing plan
 

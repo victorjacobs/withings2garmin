@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/victorjacobs/withings2garmin/internal/garmin"
-	"github.com/victorjacobs/withings2garmin/internal/secret"
+	"github.com/victorjacobs/garmin-import/internal/garmin"
+	"github.com/victorjacobs/garmin-import/internal/secret"
 )
 
 func (cli *cli) newGarminAuthCommand() *cobra.Command {

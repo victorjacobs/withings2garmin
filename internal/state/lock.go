@@ -18,7 +18,7 @@ func (store *Store) AcquireLock(ctx context.Context) (*Lock, error) {
 		return nil, err
 	}
 
-	path := filepath.Join(store.directory, "withings2garmin.lock")
+	path := filepath.Join(store.directory, "garmin-import.lock")
 	if err := verifyRegularStateFile(path); err != nil {
 		return nil, err
 	}

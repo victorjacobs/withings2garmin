@@ -4,7 +4,7 @@ import "errors"
 
 var (
 	ErrAuthenticationRequired = errors.New(
-		"garmin authentication required; run 'withings2garmin auth garmin' interactively",
+		"garmin authentication required; run 'garmin-import auth garmin' interactively",
 	)
 	ErrInvalidCredentials = errors.New("invalid Garmin credentials")
 	ErrMFARequired        = errors.New("garmin multi-factor authentication required")

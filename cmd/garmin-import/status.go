@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/victorjacobs/withings2garmin/internal/app"
-	"github.com/victorjacobs/withings2garmin/internal/state"
+	"github.com/victorjacobs/garmin-import/internal/app"
+	"github.com/victorjacobs/garmin-import/internal/state"
 )
 
 func (cli *cli) newStatusCommand() *cobra.Command {

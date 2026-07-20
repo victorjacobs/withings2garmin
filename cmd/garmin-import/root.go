@@ -6,9 +6,9 @@ import (
 	"log/slog"
 
 	"github.com/spf13/cobra"
-	"github.com/victorjacobs/withings2garmin/internal/app"
-	"github.com/victorjacobs/withings2garmin/internal/config"
-	"github.com/victorjacobs/withings2garmin/internal/state"
+	"github.com/victorjacobs/garmin-import/internal/app"
+	"github.com/victorjacobs/garmin-import/internal/config"
+	"github.com/victorjacobs/garmin-import/internal/state"
 )
 
 type cli struct {
@@ -44,7 +44,7 @@ func execute(root *cobra.Command) int {
 func newRootCommand() *cobra.Command {
 	cli := &cli{logLevel: "info"}
 	root := &cobra.Command{
-		Use:               "withings2garmin",
+		Use:               "garmin-import",
 		Short:             "Synchronize Withings scale weights to Garmin Connect",
 		SilenceErrors:     true,
 		SilenceUsage:      true,

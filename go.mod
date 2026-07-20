@@ -1,4 +1,4 @@
-module github.com/victorjacobs/withings2garmin
+module github.com/victorjacobs/garmin-import
 
 go 1.24.0
 

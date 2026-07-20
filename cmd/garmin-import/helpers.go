@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/victorjacobs/withings2garmin/internal/app"
-	"github.com/victorjacobs/withings2garmin/internal/config"
-	"github.com/victorjacobs/withings2garmin/internal/garmin"
-	"github.com/victorjacobs/withings2garmin/internal/secret"
-	"github.com/victorjacobs/withings2garmin/internal/state"
-	"github.com/victorjacobs/withings2garmin/internal/withings"
+	"github.com/victorjacobs/garmin-import/internal/app"
+	"github.com/victorjacobs/garmin-import/internal/config"
+	"github.com/victorjacobs/garmin-import/internal/garmin"
+	"github.com/victorjacobs/garmin-import/internal/secret"
+	"github.com/victorjacobs/garmin-import/internal/state"
+	"github.com/victorjacobs/garmin-import/internal/withings"
 )
 
 func parseBackfillRange(from, to string) (*time.Time, *time.Time, error) {

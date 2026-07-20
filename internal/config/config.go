@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const ApplicationName = "withings2garmin"
+const ApplicationName = "garmin-import"
 
 type LogLevel string
 

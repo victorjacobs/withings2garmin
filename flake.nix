@@ -19,7 +19,7 @@
       go = pkgs.go_1_25;
     in {
       default = (pkgs.buildGoModule.override {inherit go;}) {
-        pname = "withings2garmin";
+        pname = "garmin-import";
         version = "0.1.0";
         src = pkgs.lib.cleanSourceWith {
           src = ./.;
@@ -37,7 +37,7 @@
           "-X main.revision=${revision}"
           "-X main.buildDate=1970-01-01T00:00:00Z"
         ];
-        meta.mainProgram = "withings2garmin";
+        meta.mainProgram = "garmin-import";
       };
     });
 
