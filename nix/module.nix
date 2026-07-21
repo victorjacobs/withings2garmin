@@ -41,7 +41,7 @@ in {
     };
     schedule = mkOption {
       type = types.str;
-      default = "*-*-* 0/3:00:00";
+      default = "hourly";
     };
     randomizedDelaySec = mkOption {
       type = types.str;
